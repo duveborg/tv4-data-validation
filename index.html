@@ -133,11 +133,11 @@
                     {shouldFilterMissingData ? 'Visa alla program' : 'Visa program som saknar bilder'}
                 </button>
 
-                {programs.filter(missingData).map(program => <ProgramDetails program={program} />)}
-
+                {programs.filter(missingData).map(program =>
+                    <ProgramDetails key={program.name} program={program} />
+                )}
             </div>
         }
-
 
         ReactDOM.render(<App />, document.querySelector('#root'));
     </script>
