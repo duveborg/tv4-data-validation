@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='UTF-8'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js'></script>
+    <script src='https://unpkg.com/react@17.0.0/umd/react.production.min.js'></script>
+    <script src='https://unpkg.com/react-dom@17.0.0/umd/react-dom.production.min.js'></script>
+    <script src='https://unpkg.com/babel-standalone@6.26.0/babel.js'></script>
+    <style>
+        body {
+            background: #161718;
+            color: #fff;
+        }
+
+        .images {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+
+        .image {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .row {
+            padding-top: 100px;
+        }
+
+        .alert {
+            display: inline-block;
+            margin-bottom: 10px;
+            background: red;
+            padding: 10px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='root'></div>
+    <script type='text/babel'>
+
+        const imageProxy = source => `https://imageproxy.b17g.services?source=${source}&resize=400`
+
+        const Image = ({ src, title, expectedRatio }) => {
+            const [loadedRatio, setLoadedRatio] = React.useState()
+            const onLoad = event => {
+                setLoadedRatio(event.target.naturalWidth / event.target.naturalHeight)
+            }
+
+            return <div class="image">
+                <h4 >{title}</h4>
+                {expectedRatio && loadedRatio && (loadedRatio !== expectedRatio) && (
+                    <div className="alert">Varning! bilden har fel ratio</div>
+                )}
+                <br />
+                {src ? <img onLoad={onLoad} src={imageProxy(src)} /> : 'Inte tillgänglig'}
+            </div>
+        }
+
+        const ProgramDetails = ({ program }) => {
+
+            return <div className="row">
+                <h2 style={{ textAlign: 'center' }}>{program.name}</h2>
+                <div className="images">
+
+                    <Image title="Logo" src={program.images2.logo && program.images2.logo.url} />
+                    <Image expectedRatio={16 / 9} title="16x9 annotated clean" src={program.images2.main16x9AnnotatedClean && program.images2.main16x9AnnotatedClean.url} />
+                    <Image expectedRatio={7 / 10} title="7x10" src={program.images2.main7x10 && program.images2.main7x10.url} />
+                </div>
+            </div>
+
+        }
+
+        const App = () => {
+            const [programs, setPrograms] = React.useState([])
+            const [shouldFilterMissingData, setshouldFilterMissingData] = React.useState(false)
+            React.useEffect(() => {
+                axios({
+                    url: 'https://graphql.tv4play.se/main',
+                    method: 'post',
+                    data: {
+                        query: `
+                        {
+                            programSearch(perPage: 1000) {
+                                totalHits
+                                programs {
+                                name
+                                images2 {
+                                    logo {
+                                        url
+                                    }
+                                    main16x9AnnotatedClean {
+                                        url
+                                    }
+                                    main7x10 {
+                                        url
+                                    }
+                                }
+                                
+                                }
+                            }
+                        }
+                        `
+                    }
+                }).then(response => {
+                    console.log(response)
+                    setPrograms(response.data.data.programSearch.programs)
+                })
+            }, [])
+
+            const missingData = program => {
+                if (!shouldFilterMissingData) return true
+
+                return !program.images2.main16x9AnnotatedClean || !program.images2.main7x10
+            }
+
+            return <div>
+                <button onClick={() => setshouldFilterMissingData(!shouldFilterMissingData)}>Toggla "Visa program som saknar bilder"</button>
+
+                {programs.filter(missingData).map(program => <ProgramDetails program={program} />)}
+
+            </div>
+        }
+
+
+        ReactDOM.render(<App />, document.querySelector('#root'));
+    </script>
+</body>
+
+</html>
