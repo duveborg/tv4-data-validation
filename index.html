@@ -60,7 +60,7 @@
 
             return <div class="image">
                 <h4 >{title}</h4>
-                {expectedRatio && loadedRatio && (loadedRatio !== expectedRatio) && (
+                {expectedRatio && loadedRatio && src && (loadedRatio.toFixed(2) !== expectedRatio.toFixed(2)) && (
                     <div className="alert">Varning! bilden har fel ratio</div>
                 )}
                 <br />
@@ -76,7 +76,8 @@
 
                     <Image title="Logo" src={program.images2.logo && program.images2.logo.url} />
                     <Image expectedRatio={16 / 9} title="16x9 annotated clean" src={program.images2.main16x9AnnotatedClean && program.images2.main16x9AnnotatedClean.url} />
-                    <Image expectedRatio={7 / 10} title="7x10" src={program.images2.main7x10 && program.images2.main7x10.url} />
+                    <Image expectedRatio={7 / 10} title="7x10 clean" src={program.images2.main7x10 && program.images2.main7x10.url} />
+                    <Image expectedRatio={2 / 3} title="2x3 annotated" src={program.images2.main2x3Annotated && program.images2.main2x3Annotated.url} />
                 </div>
             </div>
 
@@ -95,19 +96,21 @@
                             programSearch(perPage: 1000) {
                                 totalHits
                                 programs {
-                                name
-                                images2 {
-                                    logo {
-                                        url
+                                    name
+                                    images2 {
+                                        logo {
+                                            url
+                                        }
+                                        main16x9AnnotatedClean {
+                                            url
+                                        }
+                                        main7x10 {
+                                            url
+                                        }
+                                        main2x3Annotated {
+                                            url
+                                        }
                                     }
-                                    main16x9AnnotatedClean {
-                                        url
-                                    }
-                                    main7x10 {
-                                        url
-                                    }
-                                }
-                                
                                 }
                             }
                         }
@@ -122,11 +125,13 @@
             const missingData = program => {
                 if (!shouldFilterMissingData) return true
 
-                return !program.images2.main16x9AnnotatedClean || !program.images2.main7x10
+                return !program.images2.main16x9AnnotatedClean || !program.images2.main7x10 || !program.images2.main2x3Annotated
             }
 
             return <div>
-                <button onClick={() => setshouldFilterMissingData(!shouldFilterMissingData)}>Toggla "Visa program som saknar bilder"</button>
+                <button onClick={() => setshouldFilterMissingData(!shouldFilterMissingData)}>
+                    {shouldFilterMissingData ? 'Visa alla program' : 'Visa program som saknar bilder'}
+                </button>
 
                 {programs.filter(missingData).map(program => <ProgramDetails program={program} />)}
 
