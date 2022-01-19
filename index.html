@@ -64,7 +64,7 @@
                     <div className="alert">Varning! bilden har fel ratio</div>
                 )}
                 <br />
-                {src ? <img onLoad={onLoad} src={imageProxy(src)} /> : 'Inte tillgänglig'}
+                {src ? <img onLoad={onLoad} src={imageProxy(src)} /> : <div className="alert">Saknas</div>}
             </div>
         }
 
