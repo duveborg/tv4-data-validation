@@ -49,8 +49,8 @@
 <body>
     <div id='root'></div>
     <script type='text/babel'>
-
-        const imageProxy = source => `https://imageproxy.b17g.services?source=${source}&resize=400`
+        const CACHE_BUST_PARAM = 'cache-bust'
+        const imageProxy = source => `https://imageproxy.b17g.services?source=${source}&resize=400&cacheBust=${localStorage.getItem(CACHE_BUST_PARAM)}`
 
         const Image = ({ src, title, expectedRatio }) => {
             const [loadedRatio, setLoadedRatio] = React.useState()
@@ -61,10 +61,10 @@
             return <div class="image">
                 <h4 >{title}</h4>
                 {expectedRatio && loadedRatio && src && (loadedRatio.toFixed(2) !== expectedRatio.toFixed(2)) && (
-                    <div className="alert">Varning! bilden har fel ratio</div>
+                    <div className="alert">Warning! invalid image ratio</div>
                 )}
                 <br />
-                {src ? <img onLoad={onLoad} src={imageProxy(src)} /> : <div className="alert">Saknas</div>}
+                {src ? <img onLoad={onLoad} src={imageProxy(src)} /> : <div className="alert">Missing</div>}
             </div>
         }
 
@@ -117,20 +117,30 @@
                         `
                     }
                 }).then(response => {
-                    console.log(response)
                     setPrograms(response.data.data.programSearch.programs)
                 })
             }, [])
 
+            const setCacheParameter = () => {
+                localStorage.setItem(CACHE_BUST_PARAM, new Date().getTime())
+                location.reload()
+            }
+
             const missingData = program => {
                 if (!shouldFilterMissingData) return true
 
-                return !program.images2.main16x9AnnotatedClean || !program.images2.main7x10 || !program.images2.main2x3Annotated
+                return !program.images2.main16x9AnnotatedClean
+                    || !program.images2.main7x10
+                    || !program.images2.main2x3Annotated
             }
 
             return <div>
                 <button onClick={() => setshouldFilterMissingData(!shouldFilterMissingData)}>
-                    {shouldFilterMissingData ? 'Visa alla program' : 'Visa program som saknar bilder'}
+                    {shouldFilterMissingData ? 'Show all programs' : 'Show programs with missing images'}
+                </button>
+
+                <button onClick={setCacheParameter}>
+                    Clear cache
                 </button>
 
                 {programs.filter(missingData).map(program =>
